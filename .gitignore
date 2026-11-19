@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Generated test reports and Playwright artifacts
+/reports/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/.playwright-mcp/
+
+# Archived examples
+/deleted example/
+
+# Local environment files (keep a shareable example)
+.env
+.env.*
+!.env.example
+
+# Logs, TypeScript build cache, and macOS metadata
+*.log
+*.tsbuildinfo
+.DS_Store
