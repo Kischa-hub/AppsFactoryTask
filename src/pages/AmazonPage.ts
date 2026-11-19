@@ -13,10 +13,18 @@ export class AmazonPage {
     private readonly sortDropdown: Locator;
 
     constructor(private readonly page: Page) {
-        this.searchBox = page.locator("#twotabsearchtextbox");
-        this.searchButton = page.locator("#nav-search-submit-button");
-        this.rejectCookiesButton = page.locator("#sp-cc-rejectall-link");
-        this.sortDropdown = page.locator("#s-result-sort-select");
+        this.searchBox = page.getByRole("searchbox", {
+            name: /^(Search Amazon\.de|Amazon\.de durchsuchen)$/i,
+        });
+        this.searchButton = page.getByRole("search").getByRole("button", {
+            name: /^(Go|Los|Suchen)$/i,
+        });
+        this.rejectCookiesButton = page.getByRole("button", {
+            name: /^(Decline|Reject all|Ablehnen|Alle ablehnen)$/i,
+        });
+        this.sortDropdown = page.getByRole("combobox", {
+            name: /^(Sort by|Sortieren nach):?$/i,
+        });
     }
 
     async open(): Promise<void> {
@@ -64,7 +72,7 @@ export class AmazonPage {
         const candidates: ProductCandidate[] = [];
 
         for (const card of await cards.all()) {
-            const name = (await card.locator("h2").allTextContents())
+            const name = (await card.getByRole("heading", { level: 2 }).allTextContents())
                 .join(" ")
                 .trim();
 
@@ -132,7 +140,9 @@ export class AmazonPage {
             this.page.locator('input[name="ASIN"]').first()
         ).toHaveValue(product.asin);
 
-        const addButton = this.page.locator("#add-to-cart-button");
+        const addButton = this.page.locator("#buybox").getByRole("button", {
+            name: /^(Add to basket|Add to Shopping Basket|In den Einkaufswagen)$/i,
+        });
 
         await expect(
             addButton,
@@ -176,7 +186,9 @@ export class AmazonPage {
         ).toBe(product.priceInCents);
 
         // Some products have no quantity selector because only one is allowed.
-        const quantity = this.page.locator("#quantity");
+        const quantity = this.page.locator("#buybox").getByRole("combobox", {
+            name: /^(Quantity|Menge|Anzahl):?$/i,
+        });
 
         if (await quantity.isVisible()) {
             await quantity.selectOption("1");
