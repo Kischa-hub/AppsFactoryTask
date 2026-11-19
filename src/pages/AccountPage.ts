@@ -19,7 +19,9 @@ export class AccountPage {
     );
 
     await expect(
-      this.page.locator('input[name="email"]')
+      this.page.getByRole("textbox", {
+        name: /email|e-mail|mobil/i,
+      })
     ).toBeVisible();
 
     await expect(

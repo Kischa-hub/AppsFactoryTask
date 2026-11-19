@@ -93,9 +93,9 @@ export class BasketPage {
     }
 
     async proceedToCheckout(): Promise<void> {
-  const checkoutButton = this.page.locator(
-    'input[name="proceedToRetailCheckout"]'
-  );
+  const checkoutButton = this.page.getByRole("button", {
+    name: /^(Proceed to checkout|Zur Kasse)\b/i,
+  });
 
   await expect(checkoutButton).toBeVisible();
   await expect(checkoutButton).toBeEnabled();
