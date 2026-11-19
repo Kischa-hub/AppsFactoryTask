@@ -16,7 +16,9 @@ setDefaultTimeout(30_000);
 Before(async function () {
 
   addedProducts = [];
-  browser = await chromium.launch({ headless: false });
+  browser = await chromium.launch({
+    headless: process.env.CI === "true",
+  });
 
   const context = await browser.newContext({
     locale: "de-DE",
