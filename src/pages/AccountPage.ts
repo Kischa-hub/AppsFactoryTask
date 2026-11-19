@@ -1,5 +1,6 @@
 import { Page } from "playwright";
 import { expect } from "@playwright/test";
+import { dismissCookieBanner } from "../utils/cookies";
 
 export class AccountPage {
   constructor(private readonly page: Page) {}
@@ -11,6 +12,7 @@ export class AccountPage {
         url.pathname === "/ap/signin",
       { timeout: 15_000 }
     );
+    await dismissCookieBanner(this.page);
 
     await expect(
       this.page.getByRole("heading", { level: 1 })

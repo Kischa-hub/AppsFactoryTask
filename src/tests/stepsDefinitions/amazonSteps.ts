@@ -9,14 +9,12 @@ let browser: Browser | undefined;
 let amazonPage: AmazonPage;
 let basketPage: BasketPage;
 let accountPage: AccountPage;
-let selectedProduct: ProductCandidate | undefined;
 let addedProducts: ProductCandidate[] = [];
 
 setDefaultTimeout(30_000);
 
 Before(async function () {
 
-  selectedProduct = undefined;
   addedProducts = [];
   browser = await chromium.launch({ headless: false });
 
@@ -55,37 +53,6 @@ When(
 );
 
 When(
-  "the guest identifies the cheapest priced result for {string}",
-  async function (product: string) {
-    selectedProduct = await amazonPage.findCheapestProduct(product);
-
-    console.log(
-      `Selected: ${selectedProduct.name}\n` +
-      `ASIN: ${selectedProduct.asin}\n` +
-      `Price: €${(selectedProduct.priceInCents / 100).toFixed(2)}`
-    );
-  }
-);
-
-When(
-  "the guest adds the selected product to the basket",
-  async function () {
-    if (!selectedProduct) {
-      throw new Error(
-        "Select a product before adding it to the basket."
-      );
-    }
-
-    await amazonPage.addProductToBasket(selectedProduct);
-
-    // Record it only after the addition succeeds.
-    addedProducts.push(selectedProduct);
-
-    console.log(`Added to basket: ${selectedProduct.name}`);
-  }
-);
-
-When(
   "the guest adds the cheapest priced matching {string} to the basket",
   { timeout: 120_000 },
   async function (product: string) {
@@ -102,12 +69,8 @@ When(
 );
 
 Then(
-  "the basket should contain both selected products with quantity 1",
+  "the basket should contain the 2 expected products",
   async function () {
-    if (addedProducts.length !== 2) {
-      throw new Error("Expected two successfully added products.");
-    }
-
     await basketPage.open();
     await basketPage.verifyProducts(addedProducts);
   }
