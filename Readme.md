@@ -13,9 +13,10 @@ See [Known limitations and troubleshooting](#known-limitations-and-troubleshooti
 ## Prerequisites
 
 - Node.js **24.x** and npm. This matches the GitHub Actions configuration.
+- Google Chrome (stable), installed on the machine running the tests. See [Google Chrome](https://www.google.com/chrome/).
 - Git, plus permission to clone this repository if it is private.
 - A system supported by Playwright, such as a supported macOS, Windows, or Ubuntu installation. See [Playwright system requirements](https://playwright.dev/docs/intro#system-requirements).
-- Internet access to GitHub, npm, the Playwright browser downloads, and Amazon.de.
+- Internet access to GitHub, npm, Google Chrome downloads when installing the browser, and Amazon.de.
 
 Check your local tools:
 
@@ -35,17 +36,24 @@ Run these commands from a terminal:
 git clone https://github.com/Kischa-hub/AppsFactoryTask.git
 cd AppsFactoryTask
 npm ci
-npx playwright install chromium
 npm test -- --tags "@twoProducts&checkout"
 ```
 
-On Ubuntu/Linux, install Chromium's required system dependencies as well:
+Google Chrome must be installed before the test command runs. If it is already installed, no additional browser download is needed. If Chrome is missing, install it from the link above or use:
 
 ```bash
-npx playwright install --with-deps chromium
+npx playwright install chrome
 ```
 
-This may require administrator privileges. `npm ci` installs the dependency versions recorded in `package-lock.json`; the browser-install command downloads the corresponding Chromium build.
+Use that installation command only when needed: it installs Chrome at the system's standard location and can replace an existing installation. See [Playwright's Chrome installation documentation](https://playwright.dev/docs/browsers#installing-google-chrome--microsoft-edge).
+
+On Ubuntu/Linux, install the browser's system dependencies if required:
+
+```bash
+npx playwright install-deps chromium
+```
+
+The dependency command uses the Chromium engine's dependency group; tests still launch Google Chrome. This may require administrator privileges. `npm ci` installs the project dependencies recorded in `package-lock.json`.
 
 The browser opens visibly during a normal local run and closes after each scenario, including failures. Cucumber exits with code `0` when the selected scenarios pass and a nonzero code when they fail.
 
@@ -133,17 +141,23 @@ The workflow is defined in [`.github/workflows/cucumber.yml`](.github/workflows/
 - Manually through **Actions → Cucumber Tests → Run workflow** once the workflow is on the default branch.
 - Daily at **00:00 Europe/Berlin**, including seasonal time changes. Scheduled runs use the default branch and may start late when GitHub is busy.
 
-The job uses Ubuntu and Node.js 24, installs dependencies and Chromium, checks TypeScript, and runs `npm test`. It sets `CI=true` so Chromium runs headlessly. There is no deployment step.
+The workflow runs a matrix of three independent jobs: `ubuntu-latest` (Linux), `windows-latest`, and `macos-latest`. Each job uses Node.js 24, installs project dependencies and Google Chrome with `npx playwright install --with-deps chrome`, checks TypeScript, and runs `npm test`. It sets `CI=true` so Chrome runs headlessly. `fail-fast: false` lets the other operating systems finish if one job fails. There is no deployment step.
 
 To inspect a run:
 
 1. Open the repository's [Actions tab](https://github.com/Kischa-hub/AppsFactoryTask/actions).
 2. Select **Cucumber Tests**, then the relevant run.
-3. Open the `test` job to inspect a failing step and its output.
-4. In the run's **Artifacts** section, download `cucumber-reports`.
+3. Open the OS-specific job, such as `Chrome (windows-latest)`, to inspect its steps and output.
+4. In the run's **Artifacts** section, download the report for the relevant operating system.
 5. Extract the download and open `cucumber-report.html` in your browser.
 
-Generated reports are uploaded for successful and failed test runs unless the workflow is cancelled. Artifacts are retained for seven days. If installation fails before Cucumber runs, a report may not exist.
+| Runner | Report artifact |
+| --- | --- |
+| `ubuntu-latest` | `cucumber-reports-ubuntu-latest` |
+| `windows-latest` | `cucumber-reports-windows-latest` |
+| `macos-latest` | `cucumber-reports-macos-latest` |
+
+Generated reports are uploaded for successful and failed test runs unless the workflow is cancelled. Each OS has its own artifact to avoid upload-name conflicts. Artifacts are retained for seven days. If installation fails before Cucumber runs, a report may not exist. The matrix configures cross-platform execution; the corresponding GitHub run results establish which platforms passed.
 
 ## What the main scenario verifies
 
@@ -151,7 +165,7 @@ Generated reports are uploaded for successful and failed test runs unless the wo
 2. Select the first result card whose heading contains the search term, has a purchase price, and is not labelled `Sponsored` or `Gesponsert`.
 3. Save its ASIN, displayed name, and price, then click **Add to basket** directly on that card.
 4. Confirm the basket count increases after each addition.
-5. Check that the active basket contains exactly two product rows and that each saved name matches one row. Matching uses name containment; Amazon may append descriptions to the basket title. Basket order does not matter.
+5. Read the number of active basket rows and compare it with the number of expected products (two in the main scenario). Check that each saved name matches one row. Matching uses name containment; Amazon may append descriptions to the basket title. Basket order does not matter.
 6. Sum the saved prices in integer cents and compare that sum with the displayed item subtotal.
 7. Proceed to checkout and verify Amazon's `/ap/signin` page and its sign-in/create-account form.
 
@@ -178,13 +192,13 @@ AppsFactoryTask/
 └── Readme.md
 ```
 
-Cucumber runs the Gherkin feature files, Playwright controls Chromium and supplies assertions, and TypeScript is loaded through `ts-node`. The code follows the Page Object Model (POM): step definitions manage the browser lifecycle and pass saved products to page objects, which contain locators, interactions, and assertions. The cookie utility handles supported English/German rejection buttons and allows up to two seconds for a delayed banner.
+Cucumber runs the Gherkin feature files, Playwright controls Google Chrome and supplies assertions, and TypeScript is loaded through `ts-node`. Chrome is selected with `chromium.launch({ channel: "chrome", ... })`; `chromium` names the Playwright browser type, while the channel selects the branded browser. The code follows the Page Object Model (POM): step definitions manage the browser lifecycle and pass saved products to page objects, which contain locators, interactions, and assertions. The cookie utility handles supported English/German rejection buttons and allows up to two seconds for a delayed banner.
 
 ## Change test data or configuration
 
-- **Products:** edit the `Examples` row for the scenario you run in [`amazonFeature.feature`](src/tests/features/amazonFeature.feature). Basket-verification scenarios expect exactly two products. Prices are captured during the run rather than hardcoded.
+- **Products:** edit the `Examples` row for the scenario you run in [`amazonFeature.feature`](src/tests/features/amazonFeature.feature). The main scenarios add two products; the basket checks use the supplied expected-product list's length and prices, so they can also check other list sizes. Prices are captured during the run rather than hardcoded.
 - **Runner and report paths:** edit [`config/cucumber.json`](config/cucumber.json).
-- **Browser and locale:** configured in the `Before` hook in [`amazonSteps.ts`](src/tests/stepsDefinitions/amazonSteps.ts). The documented suite uses Chromium and the `de-DE` locale.
+- **Browser and locale:** configured in the `Before` hook in [`amazonSteps.ts`](src/tests/stepsDefinitions/amazonSteps.ts). The documented suite uses the Google Chrome stable channel and the `de-DE` locale.
 - **Schedule:** edit the `schedule` section in [the workflow](.github/workflows/cucumber.yml), then commit and push it to the default branch.
 
 Changing the browser locale does not set Amazon's delivery country or guarantee a particular currency.
@@ -195,7 +209,7 @@ These tests exercise the live Amazon website. Catalog results, prices, delivery 
 
 | Symptom | Meaning and next step |
 | --- | --- |
-| Chromium executable is missing | Run `npx playwright install chromium`; on Linux, use `--with-deps` to install system dependencies too. |
+| Google Chrome executable is missing | Install Google Chrome at its standard system location. If it is not installed, `npx playwright install chrome` can install it; see the installation notes above. CI installs Chrome and its dependencies automatically. |
 | `Missing X server or $DISPLAY` | The process is trying to open a visible browser without a desktop display. Set `CI=true` for headless execution. |
 | Homepage search field is not found | Inspect the actual page before changing the locator or timeout. The latest CI logs do not establish whether the cause is a different page, label, loading delay, or a challenge. |
 | Clothing or stickers are selected | Matching a product name alone does not guarantee candy. The reported CI run selected Snickers workwear and a Skittles sticker. Category/search-relevance refinement is pending. |

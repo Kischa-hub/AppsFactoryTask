@@ -17,6 +17,7 @@ Before(async function () {
 
   addedProducts = [];
   browser = await chromium.launch({
+    channel: "chrome",
     headless: process.env.CI === "true",
   });
 
@@ -71,7 +72,7 @@ When(
 );
 
 Then(
-  "the basket should contain the 2 expected products",
+  "the basket should contain the expected products",
   async function () {
     await basketPage.open();
     await basketPage.verifyProducts(addedProducts);

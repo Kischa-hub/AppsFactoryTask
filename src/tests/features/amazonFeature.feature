@@ -37,7 +37,7 @@ Feature: Amazon guest shopping
     Given a new guest opens the Amazon homepage
     When the guest adds the cheapest priced matching "<firstProduct>" to the basket
     And the guest adds the cheapest priced matching "<secondProduct>" to the basket
-    Then the basket should contain the 2 expected products
+    Then the basket should contain the expected products
     And the basket item subtotal should equal the sum of the selected prices
 
     Examples:
@@ -50,7 +50,7 @@ Feature: Amazon guest shopping
     Given a new guest opens the Amazon homepage
     When the guest adds the cheapest priced matching "<firstProduct>" to the basket
     And the guest adds the cheapest priced matching "<secondProduct>" to the basket
-    Then the basket should contain the 2 expected products
+    Then the basket should contain the expected products
     And the basket item subtotal should equal the sum of the selected prices
     When the guest proceeds to checkout
     Then Amazon should ask the guest to sign in or create an account
