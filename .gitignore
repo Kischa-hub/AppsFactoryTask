@@ -11,7 +11,7 @@ node_modules/
 /.playwright-mcp/
 
 # Archived examples
-/deleted example/
+
 
 # Local environment files (keep a shareable example)
 .env
