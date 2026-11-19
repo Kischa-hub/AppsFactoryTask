@@ -14,11 +14,8 @@ export class BasketPage {
     }
 
     async open(): Promise<void> {
-        await this.page.goto(
-            "https://www.amazon.de/gp/cart/view.html"
-        );
+        await this.page.goto("https://www.amazon.de/gp/cart/view.html");
         await dismissCookieBanner(this.page);
-
         await expect(this.subtotal).toBeVisible();
     }
 
