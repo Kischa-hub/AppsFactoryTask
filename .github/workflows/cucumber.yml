@@ -15,8 +15,14 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Chrome (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     env:
       CI: "true"
@@ -34,8 +40,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install Google Chrome
+        run: npx playwright install --with-deps chrome
 
       - name: Check TypeScript
         run: npx tsc --noEmit
@@ -47,6 +53,6 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: cucumber-reports
+          name: cucumber-reports-${{ matrix.os }}
           path: reports/
           retention-days: 7

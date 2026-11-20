@@ -20,8 +20,9 @@ export class BasketPage {
     }
 
     async verifyProducts(expectedProducts: ProductCandidate[]): Promise<void> {
-        expect(expectedProducts).toHaveLength(2);
-        await expect(this.items).toHaveCount(2);
+        const actualProductCount = await this.items.count();
+        const expectedProductCount = expectedProducts.length;
+        expect(actualProductCount).toBe(expectedProductCount);
 
         for (const product of expectedProducts) {
             const item = this.items.filter({ hasText: product.name });
@@ -30,7 +31,6 @@ export class BasketPage {
     }
 
     async verifySubtotal(expectedProducts: ProductCandidate[]): Promise<void> {
-        expect(expectedProducts).toHaveLength(2);
         let expectedTotal = 0;
 
         for (const product of expectedProducts) {
@@ -39,6 +39,11 @@ export class BasketPage {
 
         const text = await this.subtotal.innerText();
         const amount = text.replace(/[€\s]/g, "");
+
+        if (!text.includes("€") || !/^\d+(?:[.,]\d{3})*[.,]\d{2}$/.test(amount)) {
+            throw new Error(`Cannot read basket subtotal "${text}".`);
+        }
+
         const actualTotal = Number(amount.replace(/[.,]/g, ""));
         expect(actualTotal).toBe(expectedTotal);
     }
