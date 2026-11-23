@@ -85,7 +85,7 @@ npx tsc --noEmit
 npm test -- --dry-run
 ```
 
-Cucumber is the test runner. Use `npm test`; the existing `test:playwright` script invokes a different runner and is not used by these feature files.
+Cucumber runs the feature files through `npm test`.
 
 ### Run without a browser window
 
