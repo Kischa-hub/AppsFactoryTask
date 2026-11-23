@@ -4,11 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cucumber-js --config config/cucumber.json",
-    "test:playwright": "npx playwright test"
+    "test": "cucumber-js --config config/cucumber.json"
   },
   "keywords": [],
-  "author": "",
+  "author": "Kareem Elhosseny",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
