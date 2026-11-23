@@ -1,11 +1,16 @@
-import { Before, After, Given, When,Then, setDefaultTimeout } from "@cucumber/cucumber";
-import { chromium, Browser } from "playwright";
+import { join } from "node:path";
+import { Before, After, Given, When, Then, Status, setDefaultTimeout } from "@cucumber/cucumber";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { AmazonPage, type ProductCandidate } from "../../pages/AmazonPage";
 import { BasketPage } from "../../pages/BasketPage";
 import { AccountPage } from "../../pages/AccountPage";
+import { captureFailureArtifacts } from "../../utils/failureArtifacts";
 
 
 let browser: Browser | undefined;
+let context: BrowserContext | undefined;
+let page: Page | undefined;
+let tracingStarted = false;
 let amazonPage: AmazonPage;
 let basketPage: BasketPage;
 let accountPage: AccountPage;
@@ -21,20 +26,55 @@ Before(async function () {
     headless: process.env.CI === "true",
   });
 
-  const context = await browser.newContext({
+  context = await browser.newContext({
     locale: "de-DE",
   });
 
-  const page = await context.newPage();
+  await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+  tracingStarted = true;
+
+  page = await context.newPage();
   amazonPage = new AmazonPage(page);
   basketPage = new BasketPage(page);
   accountPage = new AccountPage(page);
 
 });
 
-After(async function () {
-  await browser?.close();
-  browser = undefined;
+After(async function ({ result, testCaseStartedId }) {
+  try {
+    if (result?.status === Status.FAILED && context) {
+      const artifactDir = join("reports", "failures", testCaseStartedId);
+      const { screenshot, trace } = await captureFailureArtifacts(
+        artifactDir,
+        page,
+        tracingStarted ? context.tracing : undefined,
+      );
+      for (const capture of [screenshot, trace]) {
+        if (capture.status === "rejected") {
+          console.warn("Could not capture a failure artifact:", capture.reason);
+        }
+      }
+      await Promise.all([
+        screenshot.status === "fulfilled" && screenshot.value
+          ? this.attach(screenshot.value, "image/png")
+          : undefined,
+        trace.status === "fulfilled" && trace.value
+          ? this.attach(`Playwright trace: ${trace.value}`)
+          : undefined,
+      ]);
+    } else if (tracingStarted) {
+      await context?.tracing.stop();
+    }
+  } catch (error) {
+    console.warn("Could not finish collecting scenario diagnostics:", error);
+  } finally {
+    const scenarioBrowser = browser;
+    browser = undefined;
+    context = undefined;
+    page = undefined;
+    tracingStarted = false;
+    await scenarioBrowser?.close();
+  }
 });
 
 Given("a new guest opens the Amazon homepage", async function () {
