@@ -1,6 +1,7 @@
 import { Page, Locator } from "playwright";
 import { expect } from "@playwright/test";
 import { dismissCookieBanner } from "../utils/cookies";
+import { parseEuroPriceInCents } from "../utils/price";
 export type ProductCandidate = {
     asin: string;
     name: string;
@@ -76,9 +77,9 @@ export class AmazonPage {
             .join(" ")
             .trim();
         const priceText = await card.locator(priceSelector).first().innerText();
-        const amount = priceText.replace(/[€\s]/g, "");
+        const priceInCents = parseEuroPriceInCents(priceText);
 
-        if (!priceText.includes("€") || !/^\d+(?:[.,]\d{3})*[.,]\d{2}$/.test(amount)) {
+        if (priceInCents === undefined) {
             throw new Error(`Cannot read the purchase price for "${name}".`);
         }
 
@@ -100,7 +101,7 @@ export class AmazonPage {
         return {
             asin,
             name,
-            priceInCents: Number(amount.replace(/[.,]/g, "")),
+            priceInCents,
         };
     }
 

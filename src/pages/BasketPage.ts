@@ -2,6 +2,7 @@ import { Page, Locator } from "playwright";
 import { expect } from "@playwright/test";
 import type { ProductCandidate } from "./AmazonPage";
 import { dismissCookieBanner } from "../utils/cookies";
+import { parseEuroPriceInCents } from "../utils/price";
 
 export class BasketPage {
     private readonly items: Locator;
@@ -23,10 +24,13 @@ export class BasketPage {
         const actualProductCount = await this.items.count();
         const expectedProductCount = expectedProducts.length;
         expect(actualProductCount).toBe(expectedProductCount);
+        expect(new Set(expectedProducts.map((product) => product.asin)).size).toBe(expectedProductCount);
 
         for (const product of expectedProducts) {
-            const item = this.items.filter({ hasText: product.name });
-            await expect(item).toHaveCount(1);
+            const item = this.items.and(this.page.locator(`[data-asin=${JSON.stringify(product.asin)}]`));
+            await expect(item, `Expected one basket row for ASIN ${product.asin}`).toHaveCount(1);
+            await expect(item, `Expected product name on the row for ASIN ${product.asin}`)
+                .toContainText(product.name, { ignoreCase: true });
         }
     }
 
@@ -38,13 +42,12 @@ export class BasketPage {
         }
 
         const text = await this.subtotal.innerText();
-        const amount = text.replace(/[€\s]/g, "");
+        const actualTotal = parseEuroPriceInCents(text);
 
-        if (!text.includes("€") || !/^\d+(?:[.,]\d{3})*[.,]\d{2}$/.test(amount)) {
+        if (actualTotal === undefined) {
             throw new Error(`Cannot read basket subtotal "${text}".`);
         }
 
-        const actualTotal = Number(amount.replace(/[.,]/g, ""));
         expect(actualTotal).toBe(expectedTotal);
     }
 

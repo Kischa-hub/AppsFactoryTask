@@ -124,7 +124,19 @@ Open the HTML file in a browser through your file manager, or use:
 | Windows PowerShell | `Start-Process reports/cucumber-report.html` |
 | Linux desktop | `xdg-open reports/cucumber-report.html` |
 
-Reports use fixed filenames and are replaced by subsequent runs. The `reports/` folder is excluded from Git. Automatic screenshots and browser traces are not currently captured.
+Reports use fixed filenames and are replaced by subsequent runs. The `reports/` folder is excluded from Git.
+
+### Inspect a failed scenario
+
+1. Open `reports/cucumber-report.html` and expand the failed scenario's `After` hook to see the screenshot.
+2. Find `screenshot.png` and `trace.zip` in `reports/failures/<scenario-run-id>/`. Each failed attempt gets its own folder. If Chrome fails before a page opens, a screenshot may be unavailable.
+3. Open the trace in Playwright Trace Viewer. Replace `<scenario-run-id>` with the folder name.
+
+   ```bash
+   npx playwright show-trace "reports/failures/<scenario-run-id>/trace.zip"
+   ```
+
+Passing scenarios discard their traces. On GitHub Actions, the downloaded report includes the `failures/` folder when the run produced failure artifacts.
 
 ## GitHub Actions
 
@@ -159,7 +171,7 @@ Generated reports are uploaded for successful and failed test runs unless the wo
 2. Select the first result card whose heading contains the search term, has a purchase price, and is not labelled `Sponsored` or `Gesponsert`.
 3. Save its ASIN, displayed name, and price, then click **Add to basket** directly on that card.
 4. Confirm the basket count increases after each addition.
-5. Read the number of active basket rows and compare it with the number of expected products (two in the main scenario). Check that each saved name matches one row. Matching uses name containment; Amazon may append descriptions to the basket title. Basket order does not matter.
+5. Read the number of active basket rows and compare it with the number of expected products (two in the main scenario). Find exactly one row for each saved ASIN and check that the same row contains the saved name. Amazon may append descriptions to the basket title. Basket order does not matter.
 6. Sum the saved prices in integer cents and compare that sum with the displayed item subtotal.
 7. Proceed to checkout and verify Amazon's `/ap/signin` page and its sign-in/create-account form.
 
