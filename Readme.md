@@ -191,7 +191,10 @@ AppsFactoryTask/
 │   ├── tests/
 │   │   ├── features/amazonFeature.feature
 │   │   └── stepsDefinitions/amazonSteps.ts
-│   └── utils/cookies.ts                # Shared optional cookie-banner dismissal
+│   └── utils/
+│       ├── cookies.ts                  # Optional cookie-banner dismissal
+│       ├── failureArtifacts.ts         # Screenshot and trace capture
+│       └── price.ts                    # Euro price parsing for search results and basket subtotal
 ├── package.json
 ├── package-lock.json
 ├── tsconfig.json
