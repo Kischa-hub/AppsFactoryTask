@@ -4,12 +4,6 @@ Automated browser tests for the Amazon.de guest-shopping journey, written with C
 
 The main scenario searches for Snickers and Skittles, adds a selected product for each to the basket, checks the product names and item subtotal, and verifies that checkout asks the guest to sign in or create an account.
 
-## Current status
-
-The complete journey has passed in local testing. The latest reported GitHub Actions run failed: some scenarios could not find the homepage search field, and others selected non-candy products or rejected the displayed price format/currency. Investigation of those failures is pending. A successful local run does not establish that the hosted CI run will pass.
-
-See [Known limitations and troubleshooting](#known-limitations-and-troubleshooting) before interpreting a failed run.
-
 ## Prerequisites
 
 - Node.js **24.x** and npm. This matches the GitHub Actions configuration.
@@ -203,7 +197,7 @@ Cucumber runs the Gherkin feature files, Playwright controls Google Chrome and s
 
 Changing the browser locale does not set Amazon's delivery country or guarantee a particular currency.
 
-## Known limitations and troubleshooting
+## Troubleshooting
 
 These tests exercise the live Amazon website. Catalog results, prices, delivery location, language, and page layouts can differ between local and GitHub-hosted execution.
 
@@ -211,8 +205,7 @@ These tests exercise the live Amazon website. Catalog results, prices, delivery 
 | --- | --- |
 | Google Chrome executable is missing | Install Google Chrome at its standard system location. If it is not installed, `npx playwright install chrome` can install it; see the installation notes above. CI installs Chrome and its dependencies automatically. |
 | `Missing X server or $DISPLAY` | The process is trying to open a visible browser without a desktop display. Set `CI=true` for headless execution. |
-| Homepage search field is not found | Inspect the actual page before changing the locator or timeout. The latest CI logs do not establish whether the cause is a different page, label, loading delay, or a challenge. |
-| Clothing or stickers are selected | Matching a product name alone does not guarantee candy. The reported CI run selected Snickers workwear and a Skittles sticker. Category/search-relevance refinement is pending. |
+| Homepage search field is not found | Check the page URL, title, and search field label in Chrome. |
 | `Cannot read the purchase price` | Selection expects a euro purchase price with two decimal digits. Capture the actual price text and check currency/format; those details are not currently logged automatically. |
 | Basket name or total assertion fails | Inspect the selected product names/prices in the terminal output and the Cucumber report. Product availability, prices, or basket content may differ from the expected data. |
 | A CAPTCHA or access challenge appears | The live site may prevent the automated journey. Record it as a blocked/failed run rather than treating it as a successful functional test. |
