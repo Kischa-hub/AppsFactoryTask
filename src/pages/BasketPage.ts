@@ -21,9 +21,8 @@ export class BasketPage {
     }
 
     async verifyProducts(expectedProducts: ProductCandidate[]): Promise<void> {
-        const actualProductCount = await this.items.count();
         const expectedProductCount = expectedProducts.length;
-        expect(actualProductCount).toBe(expectedProductCount);
+        await expect(this.items).toHaveCount(expectedProductCount);
         expect(new Set(expectedProducts.map((product) => product.asin)).size).toBe(expectedProductCount);
 
         for (const product of expectedProducts) {
