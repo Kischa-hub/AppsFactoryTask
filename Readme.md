@@ -228,3 +228,11 @@ These tests exercise the live Amazon website. Catalog results, prices, delivery 
 The checkout assertion covers the shared sign-in/create-account entry page. It does not verify a dedicated registration form, submit registration details, or complete a purchase.
 
 When reporting a failure, include the command or selected tag, Node.js version, whether `CI=true` was set, the GitHub run link if applicable, and the relevant Cucumber report. Page URL, title, screenshot, and rejected price text are useful additional evidence when available.
+
+### Amazon.de verification page in GitHub Actions
+
+A recorded run on `macos-latest` received an Amazon verification page at `https://www.amazon.de/` with HTTP `200`. The page displayed **Weiter shoppen** and had no search field, so the scenario timed out waiting for the search box before it could start the shopping journey.
+
+To confirm the same issue in another run, download the artifact for the failed runner and check `failures/<scenario-run-id>/screenshot.png` or open `trace.zip` in Playwright Trace Viewer. See [Inspect a failed scenario](#inspect-a-failed-scenario).
+
+A local run in visible Chrome loaded the storefront normally. The trigger for the verification page and the result of clicking **Weiter shoppen** remain unverified.
